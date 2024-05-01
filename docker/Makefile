@@ -11,4 +11,5 @@ build:
 		.
 
 shell:
-	docker run --rm -it -v ${MYDIR}:/orangepi-debian -v /usr/bin/qemu-aarch64-static:/usr/bin/qemu-aarch64-static ${TAG}
+	# CAP_SYS_ADMIN is needed for mounting /proc and /sys after chroot
+	docker run --cap-add=CAP_SYS_ADMIN --rm -it -v ${MYDIR}:/orangepi-debian -v /usr/bin/qemu-aarch64-static:/usr/bin/qemu-aarch64-static ${TAG}
