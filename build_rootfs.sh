@@ -1,6 +1,7 @@
 #!/bin/bash
 
-SKIP_DEBOOTSTRAP_DEFAULT=1
+SKIP_DEBOOTSTRAP=0
+SHELL_MODE=0
 
 _ischroot="$(ischroot; test "$?" -eq "1"; echo $?)"
 IS_2ND_STATE="$_ischroot"
@@ -10,12 +11,56 @@ MOUNTPOINT=/orangepi-debian
 OUTDIR=${MOUNTPOINT}/out
 ROOTFS=${OUTDIR}/rootfs
 
+show_help () {
+    cat <<EOF
+Usage: build_rootfs.sh [OPTIONS]
+OPTIONS:
+    -k, --skip-debootstrap      Skip executing debootstrap again
+    -s, --shell                 Run a shell within the created rootfs
+    -h, --help                  Show this help
+EOF
+}
+
 mkdir -p $OUTDIR $ROOTFS
+
+ARGS=$@
+GETOPT_ARGS=$(getopt -o k,s,h --long skip-debootstrap,shell,help -- "$ARGS")
+if [ "$?" != "0" ]; then
+    echo "Invalid arguments"
+    show_help
+    exit 1;
+fi
+
+eval set -- "$GETOPT_ARGS"
+
+while [ : ]; do
+  case "$1" in
+    -k | --skip-debootstrap)
+        SKIP_DEBOOTSTRAP=1
+        shift
+        ;;
+    -s | --shell)
+        SHELL_MODE=1
+        shift
+        ;;
+    -h | --help)
+        show_help
+        exit 0
+        ;;
+    --) shift; 
+        break 
+        ;;
+  esac
+done
+
+if [ "$SHELL_MODE" == "1" ]; then
+    echo "root" | sudo -S  echo "Auto gain root permission"
+    sudo chroot $ROOTFS /bin/bash -i
+    exit 0
+fi
 
 if [ "$IS_2ND_STATE" == "0" ]; then
     echo "########## 1st Stage ##########"
-
-    SKIP_DEBOOTSTRAP=$SKIP_DEBOOTSTRAP_DEFAULT
 
     if [ ! -d $MOUNTPOINT ]; then
         echo "Please run this script inside a container with this dir mounted to $MOUNTPOINT"
@@ -39,7 +84,7 @@ if [ "$IS_2ND_STATE" == "0" ]; then
 
     # Start 2nd state
     sudo cp -v ./build_rootfs.sh ${ROOTFS}/run/
-    sudo chroot $ROOTFS bash -c "export SKIP_DEBOOTSTRAP=$SKIP_DEBOOTSTRAP && /run/build_rootfs.sh"
+    sudo chroot $ROOTFS bash -c "/run/build_rootfs.sh $ARGS"
 
     echo "Done!"
     exit 0
