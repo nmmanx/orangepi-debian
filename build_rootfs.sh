@@ -1,14 +1,13 @@
 #!/bin/bash
 
+source common.sh
+
 SKIP_DEBOOTSTRAP=0
 SHELL_MODE=0
 
 _ischroot="$(ischroot; test "$?" -eq "1"; echo $?)"
 IS_2ND_STATE="$_ischroot"
 
-MOUNTPOINT=/orangepi-debian
-
-OUTDIR=${MOUNTPOINT}/out
 ROOTFS=${OUTDIR}/rootfs
 
 show_help () {

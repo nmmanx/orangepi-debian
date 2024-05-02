@@ -15,9 +15,10 @@ RUN usermod -aG sudo $USERNAME
 
 ENV HOME=/home/$USERNAME
 ENV USER=$USERNAME
+ENV DOCKER=1
 
 RUN apt -y update
-RUN apt -y install debootstrap
+RUN apt -y install debootstrap xz-utils
 
 RUN echo "#!/bin/bash" > /run/startup.sh
 RUN echo "chroot --userspec=$USERNAME:$USERNAME / /bin/bash -i" >> /run/startup.sh
