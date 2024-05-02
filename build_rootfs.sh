@@ -55,6 +55,8 @@ done
 
 if [ "$SHELL_MODE" == "1" ]; then
     echo "root" | sudo -S  echo "Auto gain root permission"
+    sudo mount -t proc none $ROOTFS/proc
+    sudo mount -t sysfs sysfs $ROOTFS/sys
     sudo chroot $ROOTFS /bin/bash -i
     exit 0
 fi
