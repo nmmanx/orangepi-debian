@@ -18,7 +18,16 @@ ENV USER=$USERNAME
 ENV DOCKER=1
 
 RUN apt -y update
-RUN apt -y install debootstrap xz-utils
+
+# Essential packages
+RUN apt -y install debootstrap xz-utils build-essential
+
+# Required by U-Boot
+RUN apt -y install bison flex swig libssl-dev
+
+# Python packages
+RUN apt -y install python3 python3-pip
+RUN pip3 install pyelftools
 
 RUN echo "#!/bin/bash" > /run/startup.sh
 RUN echo "chroot --userspec=$USERNAME:$USERNAME / /bin/bash -i" >> /run/startup.sh
