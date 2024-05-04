@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source common.sh
+source configs/common
 
 SKIP_DEBOOTSTRAP=0
 SHELL_MODE=0

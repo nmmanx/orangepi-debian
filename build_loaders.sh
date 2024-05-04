@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source common.sh
+source configs/common
 
 TARGET=$1
 
@@ -20,7 +20,7 @@ else
     exit 1
 fi
 
-source configs/${TARGET}/config.sh
+source configs/${TARGET}/config
 if [ "$?" == "0" ]; then
     echo "Configured OK"
 else

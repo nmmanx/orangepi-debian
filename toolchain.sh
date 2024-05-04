@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source common.sh
+source configs/common
 
 TOOLCHAIN_DIR=$OUTDIR/toolchain
 
