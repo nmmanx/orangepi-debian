@@ -9,9 +9,6 @@ if [ ! -d "./configs/$TARGET" ]; then
     exit 1
 fi
 
-UBOOT_SRC=./deps/u-boot
-UBOOT_OUT=$OUTDIR/uboot
-
 source toolchain.sh
 if [ "$?" == "0" ]; then
     echo "Toolchain OK"
@@ -28,7 +25,7 @@ else
     exit 1
 fi
 
-UBOOT_MAKE_CMD="make ARCH=arm -j4 CROSS_COMPILE=$CROSS_COMPILE_PREFIX -C $UBOOT_SRC O=$UBOOT_OUT $CONFIG_UBOOT_EXTRA_MAKE_ARGS "
+UBOOT_MAKE_CMD="make ARCH=arm -j4 CROSS_COMPILE=$CROSS_COMPILE_PREFIX -C $UBOOT_DIR O=$UBOOT_OUT $CONFIG_UBOOT_EXTRA_MAKE_ARGS "
 
 mkdir -p $UBOOT_OUT
 
@@ -53,3 +50,5 @@ else
     echo "Build U-Boot failed, check: $(UBOOT_OUT)/uboot_build.log"
     exit 1
 fi
+
+source $CONFIG_LOADER_MAKE_SCRIPT $TARGET

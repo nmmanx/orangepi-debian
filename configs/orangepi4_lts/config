@@ -1,2 +1,8 @@
 CONFIG_UBOOT_DEFCONFIG="./configs/orangepi4_lts/uboot/orangepi4lts_defconfig"
 CONFIG_UBOOT_EXTRA_MAKE_ARGS="BL31=$(realpath deps/rkbin/bin/rk33/rk3399_bl31_v1.36.elf)"
+CONFIG_UBOOT_TEXT_BASE=0x00200000
+CONFIG_LOADER_MAKE_SCRIPT=rk_mkloader.sh
+CONFIG_ROCKCHIP_PLATFORM=rk3399
+CONFIG_ROCKCHIP_DDR_BIN="$(realpath deps/rkbin/bin/rk33/rk3399_ddr_933MHz_v1.30.bin)"
+CONFIG_ROCKCHIP_TRUST_INI="$(realpath deps/rkbin/RKTRUST/RK3399TRUST.ini)"
+CONFIG_LOADER_OFFSET=64

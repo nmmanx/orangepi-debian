@@ -5,3 +5,11 @@ MOUNTPOINT=./
 fi
 
 OUTDIR=${MOUNTPOINT}/out
+
+# Dependencies
+RKBIN_DIR=${MOUNTPOINT}/deps/rkbin
+UBOOT_DIR=${MOUNTPOINT}/deps/u-boot
+
+# Out dirs
+UBOOT_OUT=$OUTDIR/uboot
+LOADER_OUT=$OUTDIR/loader
