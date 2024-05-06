@@ -25,6 +25,9 @@ RUN apt -y install debootstrap xz-utils build-essential
 # Required by U-Boot
 RUN apt -y install bison flex swig libssl-dev
 
+# Required by kernel
+RUN apt -y install bc
+
 # Python packages
 RUN apt -y install python3 python3-pip
 RUN pip3 install pyelftools

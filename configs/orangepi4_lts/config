@@ -6,3 +6,7 @@ CONFIG_ROCKCHIP_PLATFORM=rk3399
 CONFIG_ROCKCHIP_DDR_BIN="$(realpath deps/rkbin/bin/rk33/rk3399_ddr_933MHz_v1.30.bin)"
 CONFIG_ROCKCHIP_TRUST_INI="$(realpath deps/rkbin/RKTRUST/RK3399TRUST.ini)"
 CONFIG_LOADER_OFFSET=64
+CONFIG_KERNEL_VERSION=6.6.30
+CONFIG_KERNEL_TARBALL_LINK=https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.6.30.tar.xz
+CONFIG_KERNEL_DEFCONFIG="./configs/orangepi4_lts/kernel/kernel_orangepi4_lts_defconfig"
+
