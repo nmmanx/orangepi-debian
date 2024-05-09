@@ -20,8 +20,6 @@ OPTIONS:
 EOF
 }
 
-mkdir -p $OUTDIR $ROOTFS
-
 ARGS=$@
 GETOPT_ARGS=$(getopt -o k,s,h --long skip-debootstrap,shell,help -- "$ARGS")
 if [ "$?" != "0" ]; then
@@ -63,6 +61,8 @@ fi
 if [ "$IS_2ND_STATE" == "0" ]; then
     echo "########## 1st Stage ##########"
 
+    mkdir -p $OUTDIR $ROOTFS
+
     if [ ! -d $MOUNTPOINT ]; then
         echo "Please run this script inside a container with this dir mounted to $MOUNTPOINT"
         exit 1
@@ -80,6 +80,11 @@ if [ "$IS_2ND_STATE" == "0" ]; then
     sudo cp -v /usr/bin/qemu-aarch64-static ${ROOTFS}/usr/bin/
     echo "nameserver 8.8.8.8" | sudo tee ${ROOTFS}/etc/resolv.conf
     echo "nameserver 8.8.4.4" | sudo tee -a ${ROOTFS}/etc/resolv.conf
+
+    # Copy kernel deb packages
+    sudo mkdir -p ${ROOTFS}/tmp/kernel
+    sudo rm ${ROOTFS}/tmp/kernel/*
+    sudo find ${OUTDIR} -maxdepth 1 -type f -name linux\-* -exec cp -v {} ${ROOTFS}/tmp/kernel/ \;
 
     echo "Finished 1st stage"
 
@@ -125,5 +130,23 @@ echo "Hostname: $(cat /etc/hostname)"
 # Install additional packages
 echo "Installing additional packages..."
 apt install -y vim net-tools ethtool udev wireless-tools wpasupplicant
+
+if [ -n "$(ls /tmp/kernel/*.buildinfo)" ]; then
+    echo "Checking kernel package..."
+    _kbuildinfo=$(find /tmp/kernel/ -iname *.buildinfo)
+    
+    _kprefix=$(cat $_kbuildinfo | awk '/^Binary:/{ print $2 }')
+    _kversion=$(cat $_kbuildinfo | awk '/^Version:/{ print $2 }')
+    _karch=$(cat $_kbuildinfo | awk '/^Architecture:/{ print $2 }')
+    _kdeb=/tmp/kernel/${_kprefix}_${_kversion}_${_karch}.deb
+
+    if [ -f "$_kdeb" ]; then
+        echo "Found kernel package: $_kdeb"
+        apt install $_kdeb
+    fi
+fi
+
+echo "Cleaning up..."
+apt -y autoremove
 
 echo "Finished 2nd stage"

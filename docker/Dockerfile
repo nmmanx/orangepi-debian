@@ -26,7 +26,7 @@ RUN apt -y install debootstrap xz-utils build-essential
 RUN apt -y install bison flex swig libssl-dev
 
 # Required by kernel
-RUN apt -y install bc
+RUN apt -y install bc debhelper rsync kmod cpio
 
 # Python packages
 RUN apt -y install python3 python3-pip

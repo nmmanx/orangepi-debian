@@ -60,4 +60,8 @@ else
     exit 1
 fi
 
+echo "Making deb package..."
+rm -v $OUTDIR/linux*
+eval $KERNEL_MAKE_CMD bindeb-pkg
+
 echo "Done"
