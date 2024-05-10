@@ -1,18 +1,31 @@
 #!/bin/bash
 
-source configs/common
-
 SKIP_DEBOOTSTRAP=0
 SHELL_MODE=0
 
 _ischroot="$(ischroot; test "$?" -eq "1"; echo $?)"
 IS_2ND_STATE="$_ischroot"
 
+TARGET=${@: -1}
+if [ -z "$TARGET" ]; then
+    echo "Missing target"
+    show_help
+    exit 1
+fi
+
+echo "TARGET=$TARGET"
+
+if [ "$IS_2ND_STATE" == "0" ]; then
+source configs/common
+source configs/${TARGET}/config
 ROOTFS=${OUTDIR}/rootfs
+else
+ROOTFS=
+fi
 
 show_help () {
     cat <<EOF
-Usage: build_rootfs.sh [OPTIONS]
+Usage: build_rootfs.sh [OPTIONS] [TARGET]
 OPTIONS:
     -k, --skip-debootstrap      Skip executing debootstrap again
     -s, --shell                 Run a shell within the created rootfs
@@ -21,7 +34,10 @@ EOF
 }
 
 ARGS=$@
-GETOPT_ARGS=$(getopt -o k,s,h --long skip-debootstrap,shell,help -- "$ARGS")
+OPTS=${@: 1: $(($# - 1))}
+echo "OPTS=$OPTS"
+
+GETOPT_ARGS=$(getopt -o k,s,h --long skip-debootstrap,shell,help -- "$OPTS")
 if [ "$?" != "0" ]; then
     echo "Invalid arguments"
     show_help
@@ -60,6 +76,7 @@ fi
 
 if [ "$IS_2ND_STATE" == "0" ]; then
     echo "########## 1st Stage ##########"
+    ROOTFS=${OUTDIR}/rootfs
 
     mkdir -p $OUTDIR $ROOTFS
 
@@ -85,6 +102,11 @@ if [ "$IS_2ND_STATE" == "0" ]; then
     sudo mkdir -p ${ROOTFS}/tmp/kernel
     sudo rm ${ROOTFS}/tmp/kernel/*
     sudo find ${OUTDIR} -maxdepth 1 -type f -name linux\-* -exec cp -v {} ${ROOTFS}/tmp/kernel/ \;
+
+    # Copy u-boot-menu config
+    require_config CONFIG_UBOOT_MENU_CONF
+    sudo mkdir -p ${ROOTFS}/tmp/uboot
+    sudo cp -v $CONFIG_UBOOT_MENU_CONF ${ROOTFS}/tmp/uboot/u-boot-menu.conf
 
     echo "Finished 1st stage"
 
@@ -129,7 +151,7 @@ echo "Hostname: $(cat /etc/hostname)"
 
 # Install additional packages
 echo "Installing additional packages..."
-apt install -y vim net-tools ethtool udev wireless-tools wpasupplicant
+apt install -y vim net-tools ethtool udev wireless-tools wpasupplicant u-boot-menu
 
 if [ -n "$(ls /tmp/kernel/*.buildinfo)" ]; then
     echo "Checking kernel package..."
@@ -145,6 +167,12 @@ if [ -n "$(ls /tmp/kernel/*.buildinfo)" ]; then
         apt install $_kdeb
     fi
 fi
+
+# Prepare extlinux.conf
+cp /tmp/uboot/u-boot-menu.conf /etc/default/u-boot
+u-boot-update
+echo "Dump extlinux.conf:"
+cat /boot/extlinux/extlinux.conf
 
 echo "Cleaning up..."
 apt -y autoremove
