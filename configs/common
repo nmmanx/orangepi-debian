@@ -15,6 +15,7 @@ UBOOT_DIR=${MOUNTPOINT}/deps/u-boot
 # Out dirs
 UBOOT_OUT=$OUTDIR/uboot
 LOADER_OUT=$OUTDIR/loader
+ROOTFS=$OUTDIR/rootfs
 
 DOWNLOAD_DIR=${OUTDIR}/downloads
 
