@@ -1,3 +1,5 @@
+PID=$$
+
 if [ "$DOCKER" == "1" ]; then
 MOUNTPOINT=/orangepi-debian
 else
@@ -21,6 +23,6 @@ KERNEL_SRC=${OUTDIR}/kernel_src
 KERNEL_OUT=${OUTDIR}/kernel_out
 
 require_config () {
-    test -n "$(eval echo \$$1)" || (echo "Missing variable $1" && exit 1)
+    test -n "$(eval echo \$$1)" || (echo "Missing variable $1" && kill -s TERM $PID)
     echo "Config: $1=\"$(eval echo \$$1)\""
 }
