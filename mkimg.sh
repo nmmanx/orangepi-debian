@@ -32,6 +32,14 @@ _loopdev=$(sudo losetup -f)
 _loopdev_mirror=${HOST_MIRROR}${_loopdev}
 echo "Loop device: $_loopdev"
 
+update_rootfs_uuid () {
+    local _uuid=$1
+    local _extlinux=$2
+    sudo sed -i -E "s/root=UUID=.{36}/root=UUID=$_uuid/g" $_extlinux
+    echo "Updated rootfs partition UUID in \"$_extlinux\":"
+    cat $_extlinux | grep root=
+}
+
 # Ensure loopback device
 if [[ "$_loopdev" == /dev/loop* ]]; then
     sudo losetup $_loopdev $IMG_PATH
@@ -66,7 +74,6 @@ if [[ "$_loopdev" == /dev/loop* ]]; then
 
     sudo sudo sudo rsync -ac --block-size=$CONFIG_SD_BLOCK_SIZE $ROOTFS/boot/ /mnt/sd/boot/boot
     sudo ls -l /mnt/sd/boot/boot
-    sudo umount /mnt/sd/boot
 
     sudo mount ${_loopdev_mirror}p2 /mnt/sd/rootfs
     sudo sudo rsync -ac --block-size=$CONFIG_SD_BLOCK_SIZE \
@@ -90,6 +97,12 @@ if [[ "$_loopdev" == /dev/loop* ]]; then
         /mnt/sd/rootfs/mnt 
 
     sudo ls -l /mnt/sd/rootfs
+    
+    _rootfs_part_uuid=$(sudo blkid ${_loopdev_mirror}p2 | grep -oP '(?<=PARTUUID=").+[^\"]')
+    echo "Rootfs partition UUID: $_rootfs_part_uuid"
+    update_rootfs_uuid $_rootfs_part_uuid /mnt/sd/boot/boot/extlinux/extlinux.conf
+    
+    sudo umount /mnt/sd/boot
     sudo umount /mnt/sd/rootfs
 
     # 6) burn bootloaders
