@@ -44,13 +44,13 @@ else
     eval $UBOOT_MAKE_CMD $CONFIG_UBOOT_DEFCONFIG
 fi
 
-_logargs="> ${UBOOT_OUT}/uboot_build.log 2<&1"
+_logargs=" 2<&1 | tee ${UBOOT_OUT}/uboot_build.log"
 eval $UBOOT_MAKE_CMD $_logargs
 
 if [ "$?" == "0" ]; then
     echo "Built U-Boot: $UBOOT_OUT"
 else
-    echo "Build U-Boot failed, check: $(UBOOT_OUT)/uboot_build.log"
+    echo "Build U-Boot failed, check: ${UBOOT_OUT}/uboot_build.log"
     exit 1
 fi
 

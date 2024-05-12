@@ -19,6 +19,8 @@ echo "Making uboot_rk.img..."
 cd $RKBIN_DIR && tools/loaderimage --pack --uboot $UBOOT_OUT/u-boot.bin \
     $LOADER_OUT/uboot_rk.img $CONFIG_UBOOT_TEXT_BASE
 
+term_on_failed $? "Failed to pack uboot"
+
 echo "Making trust.img..."
 cd $RKBIN_DIR && tools/trust_merger $CONFIG_ROCKCHIP_TRUST_INI
 mv $RKBIN_DIR/trust.img $LOADER_OUT/trust.img

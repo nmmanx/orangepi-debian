@@ -27,3 +27,10 @@ require_config () {
     test -n "$(eval echo \$$1)" || (echo "Missing variable $1" && kill -s TERM $PID)
     echo "Config: $1=\"$(eval echo \$$1)\""
 }
+
+term_on_failed () {
+    if [ "$1" != "0" ]; then
+        echo "Error: $2"
+        kill -s TERM $PID
+    fi
+}
