@@ -1,8 +1,6 @@
 MYDIR=$(realpath ..)
 TAG=orangpi/debian10_build
 
-FREE_LOOP_DEV=$(shell losetup -f)
-
 .PHONY: build shell
 build:
 	docker build \
@@ -17,9 +15,9 @@ shell:
 	docker run \
 		--privileged \
 		--cap-add=CAP_SYS_ADMIN \
-		-v /dev:/dev \
+		-v /dev:/mnt/host/dev \
 		-v ${MYDIR}:/orangepi-debian \
 		-v /usr/bin/qemu-aarch64-static:/usr/bin/qemu-aarch64-static \
-		-e FREE_LOOP_DEV=$(FREE_LOOP_DEV) \
+		-e HOST_MIRROR=/mnt/host \
 		--rm -it \
 		${TAG}

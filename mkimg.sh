@@ -14,11 +14,12 @@ source configs/$TARGET/config
 require_config CONFIG_SD_BLOCK_SIZE
 require_config CONFIG_SD_ROOTFS_START_LBA
 require_config CONFIG_SD_BOOT_START_LBA
-require_config CONFIG_SD_BOOT_SIZE_MIB
+require_config CONFIG_SD_BOOT_END_LBA
 require_config CONFIG_LOADER_OFFSET
 
 _padding_lba=8
-_rootfs_size=$(sudo du -s --block-size=$CONFIG_SD_BLOCK_SIZE $ROOTFS | cut -f 1)
+# TODO: exclude /boot while calculating img size
+_rootfs_size=$(sudo du -s --apparent-size --block-size=$CONFIG_SD_BLOCK_SIZE $ROOTFS | cut -f 1)
 _estimated_img_size=$((${CONFIG_SD_ROOTFS_START_LBA} + ${_rootfs_size} + ${_padding_lba}))
 
 echo "Rootfs size: $_rootfs_size (LBA)" 
@@ -27,7 +28,8 @@ echo "Estimated image size: $_estimated_img_size (LBA)"
 rm -f $IMG_PATH
 dd if=/dev/zero of=$IMG_PATH bs=$CONFIG_SD_BLOCK_SIZE count=$_estimated_img_size conv=notrunc
 
-_loopdev=$FREE_LOOP_DEV
+_loopdev=$(sudo losetup -f)
+_loopdev_mirror=${HOST_MIRROR}${_loopdev}
 echo "Loop device: $_loopdev"
 
 # Ensure loopback device
@@ -37,39 +39,75 @@ if [[ "$_loopdev" == /dev/loop* ]]; then
 
     # 1) create GPT partition table
     echo "Create GPT partition table"
-    sudo parted -s $_loopdev mklabel gpt
+    sudo parted -s $_loopdev_mirror mklabel gpt
+    sudo parted -s $_loopdev_mirror unit s
 
     # 2) create boot partition
     echo "Create boot partition"
-    _start=$(($CONFIG_SD_BOOT_START_LBA * $CONFIG_SD_BLOCK_SIZE / 1048576)) # Mib
-    echo "Boot start: $_start Mib"
-    sudo parted -s $_loopdev mkpart primary fat32 $_start $CONFIG_SD_BOOT_SIZE_MIB
-    sudo parted -s $_loopdev name 1 'boot' 
-    sudo parted -s $_loopdev set 1 boot on
+    sudo parted -s $_loopdev_mirror mkpart primary fat16 ${CONFIG_SD_BOOT_START_LBA}s ${CONFIG_SD_BOOT_END_LBA}s
+    sudo parted -s $_loopdev_mirror name 1 'boot' 
+    sudo parted -s $_loopdev_mirror set 1 boot on
 
     # 3) create rootfs partition
     echo "Create rootfs partition"
-     _start=$(($CONFIG_SD_ROOTFS_START_LBA * $CONFIG_SD_BLOCK_SIZE / 1048576)) # Mib
-     echo "Rootfs start: $_start Mib"
-    sudo parted -s $_loopdev mkpart primary ext4 $_start 100%
-    sudo parted -s $_loopdev name 2 'rootfs'
+    sudo parted -s $_loopdev_mirror mkpart primary ext4 ${CONFIG_SD_ROOTFS_START_LBA}s 100%
+    sudo parted -s $_loopdev_mirror name 2 'rootfs'
 
     # 4) create file systems
-    sudo partprobe -s ${_loopdev}
-    sudo mkfs.vfat ${_loopdev}p1
-    sudo mkfs.ext4 ${_loopdev}p2
+    sudo partprobe -s ${_loopdev_mirror}
+    sudo mkfs.vfat -F 16 ${_loopdev_mirror}p1
+    sudo mkfs.ext4 ${_loopdev_mirror}p2
 
     # 5) copy data
-    # TODO
+    sudo mkdir -p /mnt/sd/boot /mnt/sd/rootfs
+
+    sudo mount ${_loopdev_mirror}p1 /mnt/sd/boot
+    sudo mkdir -p /mnt/sd/boot/boot
+
+    sudo sudo sudo rsync -ac --block-size=$CONFIG_SD_BLOCK_SIZE $ROOTFS/boot/ /mnt/sd/boot/boot
+    sudo ls -l /mnt/sd/boot/boot
+    sudo umount /mnt/sd/boot
+
+    sudo mount ${_loopdev_mirror}p2 /mnt/sd/rootfs
+    sudo sudo rsync -ac --block-size=$CONFIG_SD_BLOCK_SIZE \
+        --exclude "boot" \
+        --exclude "proc" \
+        --exclude "sys" \
+        --exclude "dev" \
+        --exclude "tmp" \
+        --exclude "mnt" \
+        --exclude "debootstrap" \
+        --exclude "lost+found" \
+        $ROOTFS/ \
+        /mnt/sd/rootfs
+    
+    sudo mkdir -p \
+        /mnt/sd/rootfs/boot \
+        /mnt/sd/rootfs/proc \
+        /mnt/sd/rootfs/sys \
+        /mnt/sd/rootfs/dev \
+        /mnt/sd/rootfs/tmp \
+        /mnt/sd/rootfs/mnt 
+
+    sudo ls -l /mnt/sd/rootfs
+    sudo umount /mnt/sd/rootfs
 
     # 6) burn bootloaders
-    sudo dd if=$LOADER_OUT/loaders.img of=$_loopdev bs=$CONFIG_SD_BLOCK_SIZE seek=$CONFIG_LOADER_OFFSET
+    sudo dd if=$LOADER_OUT/loaders.img of=$_loopdev seek=$CONFIG_LOADER_OFFSET conv=fsync
 
-    sudo parted -s $_loopdev print
+    # 7) double check
+    sudo fsck.vfat ${_loopdev_mirror}p1 || echo "WARNING: check boot partition failed"
+    sudo fsck.ext4 ${_loopdev_mirror}p2 || echo "WARNING: check rootfs partition failed"
+
+    # 8) finished
+    sudo parted -s $_loopdev unit MiB print
     sudo losetup -d $_loopdev
+
+    # TODO: read rootfs UUID and pass to kernel cmdline in extlinux.conf
 else
     echo "Error: invalid loop device: $_loopdev"
     exit 1
 fi
 
-echo "Done"
+mv $IMG_PATH ${OUTDIR}/${TARGET}_sd.raw
+echo "Output: ${OUTDIR}/${TARGET}_sd.raw"
