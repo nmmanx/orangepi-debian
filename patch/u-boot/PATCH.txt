@@ -1,0 +1,1 @@
+0001-rk3399-define-CFG_SYS_INIT_RAM_ADDR-and-CFG_SYS_INIT.patch

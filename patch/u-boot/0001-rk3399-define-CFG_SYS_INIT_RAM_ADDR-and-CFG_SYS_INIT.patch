@@ -1,0 +1,27 @@
+From 36cceeef897d0982e3a0465c2f4e820f5183276f Mon Sep 17 00:00:00 2001
+From: Man Nguyen <nmman37@gmail.com>
+Date: Wed, 15 May 2024 21:56:40 +0700
+Subject: [PATCH] rk3399: define CFG_SYS_INIT_RAM_ADDR and
+ CFG_SYS_INIT_RAM_SIZE
+
+---
+ include/configs/rk3399_common.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/include/configs/rk3399_common.h b/include/configs/rk3399_common.h
+index 96ba19c659..1c1342afe1 100644
+--- a/include/configs/rk3399_common.h
++++ b/include/configs/rk3399_common.h
+@@ -13,6 +13,9 @@
+ #define CFG_SYS_SDRAM_BASE		0
+ #define SDRAM_MAX_SIZE			0xf8000000
+ 
++#define CFG_SYS_INIT_RAM_ADDR        CFG_IRAM_BASE
++#define CFG_SYS_INIT_RAM_SIZE        0x30000 // 192KB
++
+ #define ROCKPI_4B_IDBLOADER_IMAGE_GUID \
+ 	EFI_GUID(0x02f4d760, 0xcfd5, 0x43bd, 0x8e, 0x2d, \
+ 		 0xa4, 0x2a, 0xcb, 0x33, 0xc6, 0x60)
+-- 
+2.45.0
+
