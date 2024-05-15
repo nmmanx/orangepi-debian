@@ -18,6 +18,7 @@ shell:
 		-v /dev:/mnt/host/dev \
 		-v ${MYDIR}:/orangepi-debian \
 		-v /usr/bin/qemu-aarch64-static:/usr/bin/qemu-aarch64-static \
+		-v $(HOME)/.gitconfig:/home/$(shell id -un)/.gitconfig \
 		-e HOST_MIRROR=/mnt/host \
 		--rm -it \
 		${TAG}

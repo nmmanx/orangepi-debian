@@ -87,7 +87,11 @@ exec 3>&1
 
 _ret=0
 
-echo "===== START ====="
+echo "===== PATCH ====="
+
+./patch.sh -a $UBOOT_DIR
+
+echo "===== BUILD ====="
 
 ./build_loaders.sh $TARGET 3>&1 > $OUTDIR/logs/build_loaders.sh.log 2>&1
 term_on_failed $? "Build bootloaders failed, check $OUTDIR/logs/build_loaders.sh.log"

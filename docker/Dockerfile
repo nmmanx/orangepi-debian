@@ -20,7 +20,7 @@ ENV DOCKER=1
 RUN apt -y update
 
 # Essential packages
-RUN apt -y install debootstrap xz-utils build-essential parted udev dosfstools
+RUN apt -y install debootstrap xz-utils build-essential parted udev dosfstools git
 
 # Required by U-Boot
 RUN apt -y install bison flex swig libssl-dev
