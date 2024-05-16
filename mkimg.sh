@@ -18,8 +18,7 @@ require_config CONFIG_SD_BOOT_END_LBA
 require_config CONFIG_LOADER_OFFSET
 
 _padding_lba=8
-# TODO: exclude /boot while calculating img size
-_rootfs_size=$(sudo du -s --apparent-size --block-size=$CONFIG_SD_BLOCK_SIZE $ROOTFS | cut -f 1)
+_rootfs_size=$(sudo du -s --apparent-size --exclude=/{proc,sys,dev,boot} --block-size=$CONFIG_SD_BLOCK_SIZE $ROOTFS | cut -f 1)
 _estimated_img_size=$((${CONFIG_SD_ROOTFS_START_LBA} + ${_rootfs_size} + ${_padding_lba}))
 
 echo "Rootfs size: $_rootfs_size (LBA)" 
@@ -28,9 +27,8 @@ echo "Estimated image size: $_estimated_img_size (LBA)"
 rm -f $IMG_PATH
 dd if=/dev/zero of=$IMG_PATH bs=$CONFIG_SD_BLOCK_SIZE count=$_estimated_img_size conv=notrunc
 
-_loopdev=$(sudo losetup -f)
-_loopdev_mirror=${HOST_MIRROR}${_loopdev}
-echo "Loop device: $_loopdev"
+_loopdev_mirror=${HOST_MIRROR}$(sudo losetup -f)
+echo "Loop device: $_loopdev_mirror"
 
 update_rootfs_uuid () {
     local _uuid=$1
@@ -41,8 +39,8 @@ update_rootfs_uuid () {
 }
 
 # Ensure loopback device
-if [[ "$_loopdev" == /dev/loop* ]]; then
-    sudo losetup $_loopdev $IMG_PATH
+if [[ "$_loopdev_mirror" == ${HOST_MIRROR}/dev/loop* ]]; then
+    sudo losetup $_loopdev_mirror $IMG_PATH
     sudo losetup -l
 
     # 1) create GPT partition table
@@ -100,7 +98,7 @@ if [[ "$_loopdev" == /dev/loop* ]]; then
 
     sudo ls -l /mnt/sd/rootfs
     
-    _rootfs_part_uuid=$(sudo blkid ${_loopdev_mirror}p2 | grep -oP '(?<=PARTUUID=").+[^\"]')
+    _rootfs_part_uuid=$(sudo blkid ${_loopdev_mirror}p2 | grep -oP '(?<=UUID=")[^\"]+')
     echo "Rootfs partition UUID: $_rootfs_part_uuid"
     update_rootfs_uuid $_rootfs_part_uuid /mnt/sd/boot/boot/extlinux/extlinux.conf
     
@@ -109,19 +107,19 @@ if [[ "$_loopdev" == /dev/loop* ]]; then
 
     # 6) burn bootloaders
     main_log "Burn bootloaders..."
-    sudo dd if=$LOADER_OUT/loaders.img of=$_loopdev seek=$CONFIG_LOADER_OFFSET conv=fsync
+    sudo dd if=$LOADER_OUT/loaders.img of=$_loopdev_mirror seek=$CONFIG_LOADER_OFFSET conv=fsync
 
     # 7) double check
     sudo fsck.vfat ${_loopdev_mirror}p1 || echo "WARNING: check boot partition failed"
     sudo fsck.ext4 ${_loopdev_mirror}p2 || echo "WARNING: check rootfs partition failed"
 
     # 8) finished
-    sudo parted -s $_loopdev unit MiB print
-    sudo losetup -d $_loopdev
+    sudo parted -s $_loopdev_mirror unit MiB print
+    sudo losetup -d $_loopdev_mirror
 
     # TODO: read rootfs UUID and pass to kernel cmdline in extlinux.conf
 else
-    main_log "Error: invalid loop device: $_loopdev"
+    main_log "Error: invalid loop device: $_loopdev_mirror"
     exit 1
 fi
 

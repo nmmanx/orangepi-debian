@@ -177,4 +177,7 @@ cat /boot/extlinux/extlinux.conf
 echo "Cleaning up..."
 apt -y autoremove
 
+umount /proc
+umount /sys
+
 echo "Finished 2nd stage"
