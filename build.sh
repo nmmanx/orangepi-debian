@@ -107,11 +107,11 @@ if [ "$OPT_CLEAN_ROOT" == "0" ]; then
 fi
 
 echo "build_rootfs.sh:"
-./build_rootfs.sh $BUILD_ROOTFS_ARGS $TARGET 3>&1 > $OUTDIR/logs/build_rootfs.sh 2>&1
+./build_rootfs.sh $BUILD_ROOTFS_ARGS $TARGET 3>&1 > $OUTDIR/logs/build_rootfs.sh.log 2>&1
 term_on_failed $? "Build rootfs failed, check $OUTDIR/logs/build_rootfs.sh.log"
 
 echo "mkimg.sh:"
-./mkimg.sh $TARGET 3>&1 > $OUTDIR/logs/mkimg.sh 2>&1
+./mkimg.sh $TARGET 3>&1 > $OUTDIR/logs/mkimg.sh.log 2>&1
 term_on_failed $? "Make image failed, check $OUTDIR/logs/mkimg.sh.log"
 
 echo "Done"
