@@ -88,10 +88,10 @@ if [ "$IS_2ND_STATE" == "0" ]; then
     echo "root" | sudo -S  echo "Auto gain root permission"
 
     if [ "$SKIP_DEBOOTSTRAP" != "1" ]; then
-        echo "debootstrap 1st stage..."
+        main_log "debootstrap 1st stage..."
         sudo debootstrap --arch=arm64 --foreign --variant=minbase --verbose buster $ROOTFS
     else
-        echo "Skip debootstrap 1st stage"
+        main_log "Skip debootstrap 1st stage"
     fi
 
     sudo cp -v /usr/bin/qemu-aarch64-static ${ROOTFS}/usr/bin/
@@ -108,7 +108,7 @@ if [ "$IS_2ND_STATE" == "0" ]; then
     sudo mkdir -p ${ROOTFS}/tmp/uboot
     sudo cp -v $CONFIG_UBOOT_MENU_CONF ${ROOTFS}/tmp/uboot/u-boot-menu.conf
 
-    echo "Finished 1st stage"
+    main_log "Finished 1st stage"
 
     # Start 2nd state
     sudo cp -v ./build_rootfs.sh ${ROOTFS}/run/

@@ -11,7 +11,7 @@ fi
 
 source configs/${TARGET}/config
 
-echo "Preparing kernel source code..."
+main_log "Preparing kernel source code..."
 mkdir -p $DOWNLOAD_DIR $KERNEL_SRC $KERNEL_OUT
 
 require_config CONFIG_KERNEL_VERSION
@@ -20,15 +20,16 @@ require_config CONFIG_KERNEL_TARBALL_LINK
 _tarball_path=${DOWNLOAD_DIR}/$(basename $CONFIG_KERNEL_TARBALL_LINK)
 
 if [ ! -f "$_tarball_path" ]; then
-    echo "Downloading..."
+    main_log "Downloading..."
     wget $CONFIG_KERNEL_TARBALL_LINK -O $_tarball_path
 fi
-echo "Downloaded: $_tarball_path"
+main_log "Downloaded: $_tarball_path"
 
 if [ ! -f "${KERNEL_SRC}/COPYING" ]; then
-    echo "Extracting..."
+    main_log "Extracting..."
     tar -xf $_tarball_path --strip-components=1 -C $KERNEL_SRC
 fi
+main_log "Extracted: $KERNEL_SRC"
 
 require_config CONFIG_KERNEL_DEFCONFIG
 
@@ -50,18 +51,20 @@ else
     eval $KERNEL_MAKE_CMD $CONFIG_KERNEL_DEFCONFIG
 fi
 
+main_log "Building kernel..."
 _logargs=" 2>&1 | tee ${KERNEL_OUT}/kernel_build.log"
 eval $KERNEL_MAKE_CMD $_logargs
 
 if [ "$?" == "0" ]; then
-    echo "Built kernel: $KERNEL_OUT"
+    main_log "Built kernel: $KERNEL_OUT"
 else
-    echo "Build kernel failed, check: $KERNEL_OUT/kernel_build.log"
+    main_log "Build kernel failed, check: $KERNEL_OUT/kernel_build.log"
     exit 1
 fi
 
-echo "Making deb package..."
+main_log "Making deb package..."
 rm -v $OUTDIR/linux*
 eval $KERNEL_MAKE_CMD bindeb-pkg
 
 echo "Done"
+exit 0
