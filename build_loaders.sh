@@ -25,7 +25,7 @@ else
     exit 1
 fi
 
-UBOOT_MAKE_CMD="make ARCH=arm -j4 CROSS_COMPILE=$CROSS_COMPILE_PREFIX -C $UBOOT_DIR O=$UBOOT_OUT $CONFIG_UBOOT_EXTRA_MAKE_ARGS "
+UBOOT_MAKE_ARGS="ARCH=arm -j4 CROSS_COMPILE=$CROSS_COMPILE_PREFIX -C $UBOOT_DIR O=$UBOOT_OUT $CONFIG_UBOOT_EXTRA_MAKE_ARGS"
 
 mkdir -p $UBOOT_OUT
 
@@ -34,27 +34,21 @@ require_config CONFIG_LOADER_MAKE_SCRIPT
 
 echo "TARGET=$TARGET"
 echo "CONFIG_UBOOT_DEFCONFIG=$CONFIG_UBOOT_DEFCONFIG"
-echo "UBOOT_MAKE_CMD=\"$UBOOT_MAKE_CMD\""
+echo "UBOOT_MAKE_ARGS=\"$UBOOT_MAKE_ARGS\""
 
 log "Building U-Boot..."
 
 if [ -f "$CONFIG_UBOOT_DEFCONFIG" ]; then
-    eval $UBOOT_MAKE_CMD defconfig
+    make $UBOOT_MAKE_ARGS defconfig
     cp $CONFIG_UBOOT_DEFCONFIG $UBOOT_OUT/.config
-    eval $UBOOT_MAKE_CMD olddefconfig
+    make $UBOOT_MAKE_ARGS olddefconfig
 else
-    eval $UBOOT_MAKE_CMD $CONFIG_UBOOT_DEFCONFIG
-fi
-
-_logargs=" 2<&1 | tee ${UBOOT_OUT}/uboot_build.log"
-eval $UBOOT_MAKE_CMD $_logargs
-
-if [ "$?" == "0" ]; then
-    log "Built U-Boot: $UBOOT_OUT"
-else
-    log "Build U-Boot failed, check: ${UBOOT_OUT}/uboot_build.log"
+    echo "Missing defconfig: $CONFIG_UBOOT_DEFCONFIG"
     exit 1
 fi
+
+make $UBOOT_MAKE_ARGS
+test ! "$?" -eq "0" && exit 1
 
 log "Making loaders..."
 source $CONFIG_LOADER_MAKE_SCRIPT $TARGET

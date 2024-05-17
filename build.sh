@@ -97,11 +97,11 @@ echo "===== PATCH ====="
 echo "===== BUILD ====="
 
 echo "build_loaders.sh:"
-./build_loaders.sh $TARGET 3>&1 > $OUTDIR/logs/build_loaders.sh.log 2>&1
+./build_loaders.sh $TARGET > $OUTDIR/logs/build_loaders.sh.log 2>&1
 term_on_failed $? "Build bootloaders failed, check $OUTDIR/logs/build_loaders.sh.log"
 
 echo "build_kernel.sh:"
-./build_kernel.sh $TARGET 3>&1 > $OUTDIR/logs/build_kernel.sh.log 2>&1
+./build_kernel.sh $TARGET > $OUTDIR/logs/build_kernel.sh.log 2>&1
 term_on_failed $? "Build kernel failed, check $OUTDIR/logs/build_kernel.sh.log"
 
 BUILD_ROOTFS_ARGS=
@@ -110,11 +110,11 @@ if [ "$OPT_CLEAN_ROOT" == "0" ]; then
 fi
 
 echo "build_rootfs.sh:"
-./build_rootfs.sh $BUILD_ROOTFS_ARGS $TARGET 3>&1 > $OUTDIR/logs/build_rootfs.sh.log 2>&1
+./build_rootfs.sh $BUILD_ROOTFS_ARGS $TARGET > $OUTDIR/logs/build_rootfs.sh.log 2>&1
 term_on_failed $? "Build rootfs failed, check $OUTDIR/logs/build_rootfs.sh.log"
 
 echo "mkimg.sh:"
-./mkimg.sh $TARGET 3>&1 > $OUTDIR/logs/mkimg.sh.log 2>&1
+./mkimg.sh $TARGET > $OUTDIR/logs/mkimg.sh.log 2>&1
 term_on_failed $? "Make image failed, check $OUTDIR/logs/mkimg.sh.log"
 
 echo "Done"

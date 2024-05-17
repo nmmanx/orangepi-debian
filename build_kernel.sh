@@ -41,30 +41,26 @@ else
     exit 1
 fi
 
-KERNEL_MAKE_CMD="make ARCH=arm64 -j4 CROSS_COMPILE=$CROSS_COMPILE_PREFIX -C $KERNEL_SRC O=$KERNEL_OUT "
-
-if [ -f "$CONFIG_KERNEL_DEFCONFIG" ]; then
-    eval $KERNEL_MAKE_CMD defconfig
-    cp $CONFIG_KERNEL_DEFCONFIG $KERNEL_OUT/.config
-    eval $KERNEL_MAKE_CMD olddefconfig
-else
-    eval $KERNEL_MAKE_CMD $CONFIG_KERNEL_DEFCONFIG
-fi
+KERNEL_MAKE_ARGS="ARCH=arm64 -j4 CROSS_COMPILE=$CROSS_COMPILE_PREFIX -C $KERNEL_SRC O=$KERNEL_OUT"
 
 log "Building kernel..."
-_logargs=" 2>&1 | tee ${KERNEL_OUT}/kernel_build.log"
-eval $KERNEL_MAKE_CMD $_logargs
 
-if [ "$?" == "0" ]; then
-    log "Built kernel: $KERNEL_OUT"
+if [ -f "$CONFIG_KERNEL_DEFCONFIG" ]; then
+    make $KERNEL_MAKE_ARGS defconfig
+    cp $CONFIG_KERNEL_DEFCONFIG $KERNEL_OUT/.config
+    make $KERNEL_MAKE_ARGS olddefconfig
 else
-    log "Build kernel failed, check: $KERNEL_OUT/kernel_build.log"
+    echo "Missing defconfig: $CONFIG_KERNEL_DEFCONFIG"
     exit 1
 fi
 
+make $KERNEL_MAKE_ARGS
+test ! "$_?" -eq "0" && exit 1
+
 log "Making deb package..."
 rm -v $OUTDIR/linux*
-eval $KERNEL_MAKE_CMD bindeb-pkg
+make $KERNEL_MAKE_ARGS "bindeb-pkg"
+test ! "$?" -eq "0" && exit 1
 
 echo "Done"
 exit 0
