@@ -36,7 +36,7 @@ echo "TARGET=$TARGET"
 echo "CONFIG_UBOOT_DEFCONFIG=$CONFIG_UBOOT_DEFCONFIG"
 echo "UBOOT_MAKE_CMD=\"$UBOOT_MAKE_CMD\""
 
-main_log "Building U-Boot..."
+log "Building U-Boot..."
 
 if [ -f "$CONFIG_UBOOT_DEFCONFIG" ]; then
     eval $UBOOT_MAKE_CMD defconfig
@@ -50,11 +50,11 @@ _logargs=" 2<&1 | tee ${UBOOT_OUT}/uboot_build.log"
 eval $UBOOT_MAKE_CMD $_logargs
 
 if [ "$?" == "0" ]; then
-    main_log "Built U-Boot: $UBOOT_OUT"
+    log "Built U-Boot: $UBOOT_OUT"
 else
-    main_log "Build U-Boot failed, check: ${UBOOT_OUT}/uboot_build.log"
+    log "Build U-Boot failed, check: ${UBOOT_OUT}/uboot_build.log"
     exit 1
 fi
 
-main_log "Making loaders..."
+log "Making loaders..."
 source $CONFIG_LOADER_MAKE_SCRIPT $TARGET

@@ -44,29 +44,29 @@ if [[ "$_loopdev_mirror" == ${HOST_MIRROR}/dev/loop* ]]; then
     sudo losetup -l
 
     # 1) create GPT partition table
-    main_log "Create GPT partition table"
+    log "Create GPT partition table"
     sudo parted -s $_loopdev_mirror mklabel gpt
     sudo parted -s $_loopdev_mirror unit s
 
     # 2) create boot partition
-    main_log "Create boot partition"
+    log "Create boot partition"
     sudo parted -s $_loopdev_mirror mkpart primary fat16 ${CONFIG_SD_BOOT_START_LBA}s ${CONFIG_SD_BOOT_END_LBA}s
     sudo parted -s $_loopdev_mirror name 1 'boot' 
     sudo parted -s $_loopdev_mirror set 1 boot on
 
     # 3) create rootfs partition
-    main_log "Create rootfs partition"
+    log "Create rootfs partition"
     sudo parted -s $_loopdev_mirror mkpart primary ext4 ${CONFIG_SD_ROOTFS_START_LBA}s 100%
     sudo parted -s $_loopdev_mirror name 2 'rootfs'
 
     # 4) create file systems
-    main_log "Create file systems"
+    log "Create file systems"
     sudo partprobe -s ${_loopdev_mirror}
     sudo mkfs.vfat -F 16 ${_loopdev_mirror}p1
     sudo mkfs.ext4 ${_loopdev_mirror}p2
 
     # 5) copy data
-    main_log "Copying data..."
+    log "Copying data..."
     sudo mkdir -p /mnt/sd/boot /mnt/sd/rootfs
 
     sudo mount ${_loopdev_mirror}p1 /mnt/sd/boot
@@ -106,7 +106,7 @@ if [[ "$_loopdev_mirror" == ${HOST_MIRROR}/dev/loop* ]]; then
     sudo umount /mnt/sd/rootfs
 
     # 6) burn bootloaders
-    main_log "Burn bootloaders..."
+    log "Burn bootloaders..."
     sudo dd if=$LOADER_OUT/loaders.img of=$_loopdev_mirror seek=$CONFIG_LOADER_OFFSET conv=fsync
 
     # 7) double check
@@ -119,10 +119,10 @@ if [[ "$_loopdev_mirror" == ${HOST_MIRROR}/dev/loop* ]]; then
 
     # TODO: read rootfs UUID and pass to kernel cmdline in extlinux.conf
 else
-    main_log "Error: invalid loop device: $_loopdev_mirror"
+    log "Error: invalid loop device: $_loopdev_mirror"
     exit 1
 fi
 
 mv $IMG_PATH ${OUTDIR}/${TARGET}_sd.raw
-main_log "Output: ${OUTDIR}/${TARGET}_sd.raw"
+log "Output: ${OUTDIR}/${TARGET}_sd.raw"
 exit 0

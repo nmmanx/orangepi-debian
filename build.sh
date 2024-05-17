@@ -79,11 +79,14 @@ fi
 
 source configs/${TARGET}/config
 
+# Prepre log file
+echo "" > $MAIN_LOG_FILE
+tail -n0 -f --pid=$PID $MAIN_LOG_FILE &
+
 echo "Selected board: $TARGET (${BOARD_NAME})"
 echo "Re-generate rootfs: $(one2true $OPT_CLEAN_ROOT)"
 
 mkdir -p $OUTDIR/logs
-exec 3>&1
 
 _ret=0
 

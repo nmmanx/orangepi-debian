@@ -24,6 +24,9 @@ DOWNLOAD_DIR=${OUTDIR}/downloads
 KERNEL_SRC=${OUTDIR}/kernel_src
 KERNEL_OUT=${OUTDIR}/kernel_out
 
+LOG_DIR=${MOUNTPOINT}/out/logs
+MAIN_LOG_FILE=${LOG_DIR}/main.log
+
 require_config () {
     test -n "$(eval echo \$$1)" || (echo "Missing variable $1" && kill -s TERM $PID)
     echo "Config: $1=\"$(eval echo \$$1)\""
@@ -36,9 +39,8 @@ term_on_failed () {
     fi
 }
 
-main_log () {
-    echo "> $1"
-    echo "> $1" >&3
+log () {
+    echo "> $@" | tee -a $MAIN_LOG_FILE
 }
 
 one2true () {

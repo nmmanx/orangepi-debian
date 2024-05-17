@@ -3,6 +3,8 @@
 SKIP_DEBOOTSTRAP=0
 SHELL_MODE=0
 
+CHROOT_LOG_FILE=/tmp/main.log
+
 _ischroot="$(ischroot; test "$?" -eq "1"; echo $?)"
 IS_2ND_STATE="$_ischroot"
 
@@ -20,6 +22,8 @@ source configs/common
 source configs/${TARGET}/config
 ROOTFS=${OUTDIR}/rootfs
 else
+source /tmp/common
+MAIN_LOG_FILE=$CHROOT_LOG_FILE
 ROOTFS=
 fi
 
@@ -75,7 +79,7 @@ if [ "$SHELL_MODE" == "1" ]; then
 fi
 
 if [ "$IS_2ND_STATE" == "0" ]; then
-    echo "########## 1st Stage ##########"
+    log "########## 1st Stage ##########"
     ROOTFS=${OUTDIR}/rootfs
 
     mkdir -p $OUTDIR $ROOTFS
@@ -88,10 +92,10 @@ if [ "$IS_2ND_STATE" == "0" ]; then
     echo "root" | sudo -S  echo "Auto gain root permission"
 
     if [ "$SKIP_DEBOOTSTRAP" != "1" ]; then
-        main_log "debootstrap 1st stage..."
+        log "debootstrap 1st stage..."
         sudo debootstrap --arch=arm64 --foreign --variant=minbase --verbose buster $ROOTFS
     else
-        main_log "Skip debootstrap 1st stage"
+        log "Skip debootstrap 1st stage"
     fi
 
     sudo cp -v /usr/bin/qemu-aarch64-static ${ROOTFS}/usr/bin/
@@ -108,10 +112,16 @@ if [ "$IS_2ND_STATE" == "0" ]; then
     sudo mkdir -p ${ROOTFS}/tmp/uboot
     sudo cp -v $CONFIG_UBOOT_MENU_CONF ${ROOTFS}/tmp/uboot/u-boot-menu.conf
 
-    main_log "Finished 1st stage"
+    log "Finished 1st stage"
 
     # Start 2nd state
     sudo cp -v ./build_rootfs.sh ${ROOTFS}/run/
+    sudo cp -v configs/common ${ROOTFS}/tmp/common
+
+    # Redirect chroot log file to main log file
+    echo "" | sudo tee ${ROOTFS}/${CHROOT_LOG_FILE}
+    sudo tail -n0 -f --pid=$PID ${ROOTFS}${CHROOT_LOG_FILE} >> $MAIN_LOG_FILE &
+
     sudo chroot $ROOTFS bash -c "/run/build_rootfs.sh $ARGS"
 
     echo "Done!"
@@ -119,7 +129,7 @@ if [ "$IS_2ND_STATE" == "0" ]; then
 fi
 
 # The below script will run on the new rootfs as root user
-echo "########## 2nd Stage ##########"
+log "########## 2nd Stage ##########"
 
 USERNAME=orangepi
 PASSWORD=root
@@ -128,10 +138,10 @@ HOSTNAME=orangepi4lts
 export LANG=C
 
 if [ "$SKIP_DEBOOTSTRAP" != "1" ]; then
-    echo "debootstrap 2nd stage... (could be long, please wait)"
+    log "debootstrap 2nd stage... (could be long, please wait)"
     /debootstrap/debootstrap --keep-debootstrap-dir --verbose --second-stage
 else
-    echo "Skip debootstrap 2nd stage"
+    log "Skip debootstrap 2nd stage"
 fi
 
 # Require --cap-add=CAP_SYS_ADMIN passed to docker run
@@ -142,19 +152,19 @@ apt update
 apt install -y sudo
 
 # Init admin user
-echo "Adding user"
+log "Adding user"
 useradd -m -s /bin/bash -G sudo -u 1000 -p $PASSWORD $USERNAME
 
 # Hostname
-echo $HOSTNAME > /etc/hostname
+log $HOSTNAME > /etc/hostname
 echo "Hostname: $(cat /etc/hostname)"
 
 # Install additional packages
-echo "Installing additional packages..."
+log "Installing additional packages..."
 apt install -y vim net-tools ethtool udev wireless-tools wpasupplicant u-boot-menu
 
 if [ -n "$(ls /tmp/kernel/*.buildinfo)" ]; then
-    echo "Checking kernel package..."
+    log "Checking kernel package..."
     _kbuildinfo=$(find /tmp/kernel/ -iname *.buildinfo)
     
     _kprefix=$(cat $_kbuildinfo | awk '/^Binary:/{ print $2 }')
@@ -163,21 +173,23 @@ if [ -n "$(ls /tmp/kernel/*.buildinfo)" ]; then
     _kdeb=/tmp/kernel/${_kprefix}_${_kversion}_${_karch}.deb
 
     if [ -f "$_kdeb" ]; then
-        echo "Found kernel package: $_kdeb"
+        log "Install kernel package: $_kdeb"
         apt install $_kdeb
     fi
 fi
 
 # Prepare extlinux.conf
+log "Update uboot boot entry"
 cp /tmp/uboot/u-boot-menu.conf /etc/default/u-boot
 u-boot-update
 echo "Dump extlinux.conf:"
 cat /boot/extlinux/extlinux.conf
 
-echo "Cleaning up..."
+log "Cleaning up..."
 apt -y autoremove
 
 umount /proc
 umount /sys
 
-echo "Finished 2nd stage"
+log "Finished 2nd stage"
+exit 0
