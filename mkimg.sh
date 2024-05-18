@@ -18,7 +18,7 @@ require_config CONFIG_SD_BOOT_END_LBA
 require_config CONFIG_LOADER_OFFSET
 
 _padding_lba=8
-_rootfs_size=$(sudo du -s --apparent-size --exclude=/{proc,sys,dev,boot} --block-size=$CONFIG_SD_BLOCK_SIZE $ROOTFS | cut -f 1)
+_rootfs_size=$(sudo du -s -x --apparent-size --exclude=/{proc,sys,dev,boot} --block-size=$CONFIG_SD_BLOCK_SIZE $ROOTFS | cut -f 1)
 _estimated_img_size=$((${CONFIG_SD_ROOTFS_START_LBA} + ${_rootfs_size} + ${_padding_lba}))
 
 echo "Rootfs size: $_rootfs_size (LBA)" 
