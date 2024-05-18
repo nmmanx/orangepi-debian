@@ -161,7 +161,7 @@ echo "Hostname: $(cat /etc/hostname)"
 
 # Install additional packages
 log "Installing additional packages..."
-apt install -y vim net-tools ethtool udev wireless-tools wpasupplicant u-boot-menu
+apt install -y vim net-tools ethtool udev wireless-tools wpasupplicant u-boot-menu initramfs-tools
 
 if [ -n "$(ls /tmp/kernel/*.buildinfo)" ]; then
     log "Checking kernel package..."
@@ -176,6 +176,11 @@ if [ -n "$(ls /tmp/kernel/*.buildinfo)" ]; then
         log "Install kernel package: $_kdeb"
         apt install -y $_kdeb
     fi
+
+    update-initramfs -c -v -k "$(echo $_kprefix | cut -d "-" -f 3)"
+else
+    echo "Kernel buildinfo file not found"
+    exit 1
 fi
 
 # Prepare extlinux.conf

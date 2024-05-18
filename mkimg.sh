@@ -33,7 +33,7 @@ echo "Loop device: $_loopdev_mirror"
 update_rootfs_uuid () {
     local _uuid=$1
     local _extlinux=$2
-    sudo sed -i -E "s/root=UUID=.{36}/root=UUID=$_uuid/g" $_extlinux
+    sudo sed -i -E "s/root=UUID=.{36}/root=PARTUUID=$_uuid/g" $_extlinux
     echo "Updated rootfs partition UUID in \"$_extlinux\":"
     cat $_extlinux | grep root=
 }
@@ -98,9 +98,9 @@ if [[ "$_loopdev_mirror" == ${HOST_MIRROR}/dev/loop* ]]; then
 
     sudo ls -l /mnt/sd/rootfs
     
-    _rootfs_part_uuid=$(sudo blkid ${_loopdev_mirror}p2 | grep -oP '(?<=UUID=")[^\"]+')
-    echo "Rootfs partition UUID: $_rootfs_part_uuid"
-    update_rootfs_uuid $_rootfs_part_uuid /mnt/sd/boot/boot/extlinux/extlinux.conf
+    # _rootfs_part_uuid=$(sudo blkid -p ${_loopdev_mirror}p2 | grep -oP '(?<=PART_ENTRY_UUID=")[^\"]+')
+    # echo "Rootfs partition UUID: $_rootfs_part_uuid"
+    # update_rootfs_uuid $_rootfs_part_uuid /mnt/sd/boot/boot/extlinux/extlinux.conf
     
     sudo umount /mnt/sd/boot
     sudo umount /mnt/sd/rootfs
