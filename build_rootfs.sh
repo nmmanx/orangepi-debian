@@ -23,6 +23,7 @@ source configs/${TARGET}/config
 ROOTFS=${OUTDIR}/rootfs
 else
 source /tmp/common
+source /tmp/config
 MAIN_LOG_FILE=$CHROOT_LOG_FILE
 ROOTFS=
 fi
@@ -117,6 +118,7 @@ if [ "$IS_2ND_STATE" == "0" ]; then
     # Start 2nd state
     sudo cp -v ./build_rootfs.sh ${ROOTFS}/run/
     sudo cp -v configs/common ${ROOTFS}/tmp/common
+    sudo cp -v configs/$TARGET/config ${ROOTFS}/tmp/config
 
     # Redirect chroot log file to main log file
     echo "" | sudo tee ${ROOTFS}/${CHROOT_LOG_FILE}
@@ -131,11 +133,12 @@ fi
 # The below script will run on the new rootfs as root user
 log "########## 2nd Stage ##########"
 
-USERNAME=orangepi
-PASSWORD=root
-HOSTNAME=orangepi4lts
-
 export LANG=C
+
+require_config CONFIG_USERNAME
+require_config CONFIG_PASSWORD
+require_config CONFIG_HOSTNAME
+require_config CONFIG_PACKAGES
 
 if [ "$SKIP_DEBOOTSTRAP" != "1" ]; then
     log "debootstrap 2nd stage... (could be long, please wait)"
@@ -153,15 +156,16 @@ apt install -y sudo
 
 # Init admin user
 log "Adding user"
-useradd -m -s /bin/bash -G sudo -u 1000 -p $PASSWORD $USERNAME
+useradd -m -s /bin/bash -G sudo -u 1000 -p $CONFIG_PASSWORD $CONFIG_USERNAME
+echo ${CONFIG_USERNAME}:${CONFIG_PASSWORD} | chpasswd
 
 # Hostname
-log $HOSTNAME > /etc/hostname
+echo $CONFIG_HOSTNAME > /etc/hostname
 echo "Hostname: $(cat /etc/hostname)"
 
-# Install additional packages
-log "Installing additional packages..."
-apt install -y vim net-tools ethtool udev wireless-tools wpasupplicant u-boot-menu initramfs-tools
+# Install required packages
+log "Installing required packages..."
+apt install -y u-boot-menu initramfs-tools
 
 if [ -n "$(ls /tmp/kernel/*.buildinfo)" ]; then
     log "Checking kernel package..."
@@ -182,6 +186,12 @@ else
     echo "Kernel buildinfo file not found"
     exit 1
 fi
+
+export DEBIAN_FRONTEND="noninteractive"
+
+log "Installing additional packages..."
+apt install -y $CONFIG_PACKAGES
+apt install --fix-broken
 
 # Prepare extlinux.conf
 log "Update uboot boot entry"

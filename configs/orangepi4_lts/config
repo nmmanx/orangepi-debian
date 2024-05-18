@@ -16,3 +16,8 @@ CONFIG_SD_BLOCK_SIZE=512
 CONFIG_SD_BOOT_START_LBA=40960
 CONFIG_SD_BOOT_END_LBA=262143
 CONFIG_SD_ROOTFS_START_LBA=262144
+CONFIG_PACKAGES="vim util-linux net-tools ethtool udev wireless-tools wpasupplicant \
+iproute2 inetutils-ping dhcpcd5 iwd usbutils pciutils neofetch"
+CONFIG_USERNAME=orangepi
+CONFIG_PASSWORD=root
+CONFIG_HOSTNAME=orangepi4lts
