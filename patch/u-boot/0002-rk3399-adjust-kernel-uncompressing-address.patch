@@ -1,0 +1,25 @@
+From 82343674013dc448f2a44e6b2cd57763ed33a652 Mon Sep 17 00:00:00 2001
+From: Man Nguyen <nmman37@gmail.com>
+Date: Sat, 18 May 2024 17:54:23 +0700
+Subject: [PATCH 2/2] rk3399: adjust kernel uncompressing address
+
+---
+ include/configs/rk3399_common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/configs/rk3399_common.h b/include/configs/rk3399_common.h
+index 1c1342afe1..b3b4923b65 100644
+--- a/include/configs/rk3399_common.h
++++ b/include/configs/rk3399_common.h
+@@ -43,7 +43,7 @@
+ 	"fdtoverlay_addr_r=0x02000000\0" \
+ 	"kernel_addr_r=0x02080000\0" \
+ 	"ramdisk_addr_r=0x06000000\0" \
+-	"kernel_comp_addr_r=0x08000000\0" \
++	"kernel_comp_addr_r=0x0E000000\0" \
+ 	"kernel_comp_size=0x2000000\0"
+ 
+ #ifndef ROCKCHIP_DEVICE_SETTINGS
+-- 
+2.45.0
+

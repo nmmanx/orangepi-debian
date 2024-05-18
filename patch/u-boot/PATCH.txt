@@ -1,1 +1,2 @@
 0001-rk3399-define-CFG_SYS_INIT_RAM_ADDR-and-CFG_SYS_INIT.patch
+0002-rk3399-adjust-kernel-uncompressing-address.patch
