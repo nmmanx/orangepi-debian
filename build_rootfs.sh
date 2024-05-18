@@ -174,7 +174,7 @@ if [ -n "$(ls /tmp/kernel/*.buildinfo)" ]; then
 
     if [ -f "$_kdeb" ]; then
         log "Install kernel package: $_kdeb"
-        apt install $_kdeb
+        apt install -y $_kdeb
     fi
 fi
 
