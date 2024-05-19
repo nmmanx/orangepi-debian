@@ -50,3 +50,9 @@ one2true () {
         echo -n "false";
     fi
 }
+
+njob() {
+    local NJ=$(($(nproc --all) - 2))
+    if [ ! $NJ -gt 0 ]; then NJ=2; fi
+    echo $NJ
+}
